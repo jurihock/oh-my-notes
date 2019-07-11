@@ -1,0 +1,62 @@
+from app import app
+
+from utils import request
+from utils import response
+from utils import database
+
+@app.route('/folder/<folder>/file/<file>')
+def select_file(folder, file):
+
+  with database.database(request.username()) as db:
+
+    folder = db.select_folder(folder)
+    assert folder
+
+    file = db.select_file(file)
+    assert file
+
+    folders = list(db.select_folders())
+    files = list(db.select_files(folder))
+
+  selected = \
+  {
+    'folder': folder,
+    'file': file
+  }
+
+  return response.template('bootstrap.html', folders=folders, files=files, selected=selected)
+
+@app.route('/file/create')
+def create_file():
+
+  if not request.has('folder'):
+    return response.error(400)
+
+  if not request.has('name'):
+    return response.error(400)
+
+  if not request.has('type'):
+    return response.error(400)
+
+  folder = request.str('folder')
+  name = request.str('name')
+  type = request.str('type')
+
+  with database.database(request.username()) as db:
+
+    folder = db.select_folder(folder)
+    assert folder
+
+    file = db.create_file(folder, name, type)
+
+  return response.redirect('select_file', folder=folder['id'], file=file['id'])
+
+@app.route('/file/<file>/delete')
+def delete_file(file):
+
+  with database.database(request.username()) as db:
+
+    file = db.delete_file(file)
+    folder = file['folder']['id']
+
+  return response.redirect('select_folder', folder=folder)

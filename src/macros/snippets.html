@@ -1,0 +1,385 @@
+{% import 'icons.html' as icons %}
+
+{% macro head() %}
+
+  <meta charset="utf-8"/>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+
+  <link rel="icon" href="data:,"/>
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css"/>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}"/>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.js" integrity="sha256-vZy89JbbMLTO6cMnTZgZKvZ+h4EFdvPFupTQGyiVYZg=" crossorigin="anonymous"></script>
+
+{% endmacro %}
+
+{% macro tail() %}
+
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.2.2/dist/latest/bootstrap-autocomplete.min.js"></script>
+  <script src="https://craig.global.ssl.fastly.net/js/mousetrap/mousetrap.min.js?a4098"></script>
+  <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+  <script>
+
+    $(function()
+    {
+      $('[data-toggle="tooltip"]').tooltip();
+
+      $(document).on('mouseenter', '.clip', function()
+      {
+        // https://stackoverflow.com/a/13259660
+
+        var $this = $(this);
+        var $title = $this.attr('title');
+
+        if (!$title)
+        {
+          if (this.offsetWidth < this.scrollWidth)
+          {
+            $this.attr('title', $this.text());
+          }
+        }
+        else
+        {
+          if (this.offsetWidth >= this.scrollWidth && $title == $this.text())
+          {
+            $this.removeAttr('title');
+          }
+        }
+      });
+    });
+
+    $(function()
+    {
+      $('#create_folder_dialog').on('shown.bs.modal', function()
+      {
+        $('#create_folder_name').trigger('focus');
+      });
+
+      $('#create_file_dialog').on('shown.bs.modal', function()
+      {
+        $('#create_file_name').trigger('focus');
+      });
+
+      $('#create_folder_dialog').on('show.bs.modal', function()
+      {
+        $('#create_folder_name').val('');
+      });
+
+      $('#create_file_dialog').on('show.bs.modal', function()
+      {
+        $('#create_file_folder').val('{{ selected.folder.name }}');
+        $('#create_file_name').val('');
+        $('#create_file_type_markdown').prop('checked', true);
+        $('#create_file_type_lilypond').prop('checked', false);
+      });
+
+      $('#create_file_folder').autoComplete({minLength:1});
+
+      Mousetrap.bind('shift+f', function() { $('#create_folder_dialog').modal('show'); }, 'keyup');
+      Mousetrap.bind('f', function() { $('#create_file_dialog').modal('show'); }, 'keyup');
+    });
+
+    $(function()
+    {
+      $('button[data-href]').on('click', function()
+      {
+        var href = $(this).attr('data-href');
+        window.location.replace(href);
+        return false;
+      });
+    });
+
+  </script>
+
+{% endmacro %}
+
+
+{% macro topnav() %}
+
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow fixed-top topnav">
+    <a class="navbar-brand" href="{{ url_for('index') }}">Oh My Notes!</a>
+  </nav>
+
+{% endmacro %}
+
+{% macro sidenav(width) %}
+
+  {% set alt_folders, alt_folders_gradient = folders|shorten(selected.folder, 3) %}
+  {% set alt_files, alt_files_gradient = files|shorten(selected.file, 5) %}
+
+  <nav class="col-{{ width }} bg-light sidenav">
+
+    <div class="btn-group btn-group-sm">
+      <button type="button"
+              class="btn btn-light"
+              data-toggle="modal" data-target="#create_folder_dialog">
+        <span data-toggle="tooltip" data-placement="bottom" title="Add new folder...">
+          {{ icons.icon('fas fa-folder') }}
+        </span>
+      </button>
+      <button type="button"
+              class="btn btn-light"
+              data-toggle="modal" data-target="#create_file_dialog">
+        <span data-toggle="tooltip" data-placement="bottom" title="Add new file...">
+          {{ icons.icon('fas fa-file') }}
+        </span>
+      </button>
+    </div>
+
+    <div id="folders-complete" class="{{ 'hide' if alt_folders else '' }}">
+    <div class="list-group mt-1">
+
+      {% for folder in folders %}
+
+        {% if folder.id == selected.folder.id %}
+
+          <a href="{{ url_for('select_folder', folder=folder.id) }}" class="list-group-item list-group-item-action active">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="clip">{{ folder.name }}</span>
+              <span class="badge badge-primary badge-pill badge-light">{{ folder.files }}</span>
+            </div>
+            <div class="btn-group btn-group-sm mt-3">
+              <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Rename this folder...">
+                {{ icons.icon('fas fa-edit') }}
+              </button>
+              <button type="button" class="btn btn-light" data-href="{{ url_for('delete_folder', folder=folder.id) }}" data-toggle="tooltip" data-placement="bottom" title="Delete this folder...">
+                {{ icons.icon('fas fa-trash') }}
+              </button>
+            </div>
+          </a>
+
+        {% else %}
+
+          <a href="{{ url_for('select_folder', folder=folder.id) }}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="clip">{{ folder.name }}</span>
+              <span class="badge badge-primary badge-pill">{{ folder.files }}</span>
+            </div>
+          </a>
+
+        {% endif %}
+
+      {% endfor %}
+
+    </div>
+    </div>
+
+    {% if alt_folders %}
+
+      <div id="folders-incomplete">
+      <div class="list-group mt-1">
+
+        {% if alt_folders_gradient <= 0 %}
+
+          <button type="button"
+                  class="list-group-item list-group-item-action list-group-item-light text-center"
+                  style="padding:0"
+                  data-toggle="tooltip" data-placement="bottom" title="Show hidden folders"
+                  onclick="show_hidden_folders()">
+            {{ icons.icon('fas fa-caret-up') }}
+          </button>
+
+        {% endif %}
+
+        {% for folder in alt_folders %}
+
+          {% if folder.id == selected.folder.id %}
+
+            <a href="{{ url_for('select_folder', folder=folder.id) }}" class="list-group-item list-group-item-action active">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="clip">{{ folder.name }}</span>
+                <span class="badge badge-primary badge-pill badge-light">{{ folder.files }}</span>
+              </div>
+              <div class="btn-group btn-group-sm mt-3">
+                <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Rename this folder...">
+                  {{ icons.icon('fas fa-edit') }}
+                </button>
+                <button type="button" class="btn btn-light" data-href="{{ url_for('delete_folder', folder=folder.id) }}" data-toggle="tooltip" data-placement="bottom" title="Delete this folder...">
+                  {{ icons.icon('fas fa-trash') }}
+                </button>
+              </div>
+            </a>
+
+          {% else %}
+
+            <a href="{{ url_for('select_folder', folder=folder.id) }}" class="list-group-item list-group-item-action">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="clip">{{ folder.name }}</span>
+                <span class="badge badge-primary badge-pill">{{ folder.files }}</span>
+              </div>
+            </a>
+
+          {% endif %}
+
+        {% endfor %}
+
+        {% if alt_folders_gradient >= 0 %}
+
+          <button type="button"
+                  class="list-group-item list-group-item-action list-group-item-light text-center"
+                  style="padding:0"
+                  data-toggle="tooltip" data-placement="bottom" title="Show hidden folders"
+                  onclick="show_hidden_folders()">
+            {{ icons.icon('fas fa-caret-down') }}
+          </button>
+
+        {% endif %}
+
+      </div>
+      </div>
+
+      <script>
+
+        function show_hidden_folders()
+        {
+          $('#folders-complete').removeClass('hide');
+          $('#folders-incomplete').addClass('hide');
+        }
+
+      </script>
+
+    {% endif %}
+
+    <hr/>
+
+    <div id="files-complete" class="{{ 'hide' if alt_files else '' }}">
+    <div class="list-group mt-1">
+
+      {% for file in files %}
+
+        {% if file.id == selected.file.id %}
+
+          <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action active">
+            <div class="d-flex w-100 justify-content-between">
+              <span class="clip">{{ file.name }}</span>
+              <small>{{ file.age }}</small>
+            </div>
+            <div class="btn-group btn-group-sm mt-3">
+              <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Rename this file...">
+                {{ icons.icon('fas fa-edit') }}
+              </button>
+              <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Move this file to another folder...">
+                {{ icons.icon('fas fa-folder-open') }}
+              </button>
+              <button type="button" class="btn btn-light" data-href="{{ url_for('delete_file', file=file.id) }}" data-toggle="tooltip" data-placement="bottom" title="Delete this file...">
+                {{ icons.icon('fas fa-trash') }}
+              </button>
+            </div>
+          </a>
+
+        {% else %}
+
+          <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <span class="clip">{{ file.name }}</span>
+              <small class="text-muted">{{ file.age }}</small>
+            </div>
+          </a>
+
+        {% endif %}
+
+      {% endfor %}
+
+    </div>
+    </div>
+
+    {% if alt_files %}
+
+      <div id="files-incomplete">
+      <div class="list-group mt-1">
+
+        {% if alt_files_gradient <= 0 %}
+
+          <button type="button"
+                  class="list-group-item list-group-item-action list-group-item-light text-center"
+                  style="padding:0"
+                  data-toggle="tooltip" data-placement="bottom" title="Show hidden files"
+                  onclick="show_hidden_files()">
+            {{ icons.icon('fas fa-caret-up') }}
+          </button>
+
+        {% endif %}
+
+        {% for file in alt_files %}
+
+          {% if file.id == selected.file.id %}
+
+            <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action active">
+              <div class="d-flex w-100 justify-content-between">
+                <span class="clip">{{ file.name }}</span>
+                <small>{{ file.age }}</small>
+              </div>
+              <div class="btn-group btn-group-sm mt-3">
+                <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Rename this file...">
+                  {{ icons.icon('fas fa-edit') }}
+                </button>
+                <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Move this file to another folder...">
+                  {{ icons.icon('fas fa-folder-open') }}
+                </button>
+                <button type="button" class="btn btn-light" data-href="{{ url_for('delete_file', file=file.id) }}" data-toggle="tooltip" data-placement="bottom" title="Delete this file...">
+                  {{ icons.icon('fas fa-trash') }}
+                </button>
+              </div>
+            </a>
+
+          {% else %}
+
+            <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <span class="clip">{{ file.name }}</span>
+                <small class="text-muted">{{ file.age }}</small>
+              </div>
+            </a>
+
+          {% endif %}
+
+        {% endfor %}
+
+        {% if alt_files_gradient >= 0 %}
+
+          <button type="button"
+                  class="list-group-item list-group-item-action list-group-item-light text-center"
+                  style="padding:0"
+                  data-toggle="tooltip" data-placement="bottom" title="Show hidden files"
+                  onclick="show_hidden_files()">
+            {{ icons.icon('fas fa-caret-down') }}
+          </button>
+
+        {% endif %}
+
+      </div>
+      </div>
+
+      <script>
+
+        function show_hidden_files()
+        {
+          $('#files-complete').removeClass('hide');
+          $('#files-incomplete').addClass('hide');
+        }
+
+      </script>
+
+    {% endif %}
+
+  </nav>
+
+{% endmacro %}
+
+{% macro main(width) %}
+
+  <main class="col-{{ width }} offset-{{ 12 - width }}">
+    {{ caller() }}
+  </main>
+
+{% endmacro %}

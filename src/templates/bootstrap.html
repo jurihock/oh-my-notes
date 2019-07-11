@@ -1,0 +1,40 @@
+{# TEMPLATE #}
+
+{% import 'snippets.html' as snippets with context %}
+{% import 'dialogs.html' as dialogs with context %}
+
+<!doctype html>
+<html lang="en">
+<head>
+
+  <title>Hello, world!</title>
+
+  {{ snippets.head() }}
+
+  {% block head %}{% endblock %}
+
+</head>
+<body>
+
+  {{ dialogs.create_folder_dialog() }}
+  {{ dialogs.create_file_dialog() }}
+
+  {{ snippets.topnav() }}
+
+  <div class="container-fluid">
+  <div class="row">
+
+    {{ snippets.sidenav(width=3) }}
+
+    {% call snippets.main(width=9) %}
+      <h4>Main</h4>
+      {% block main %}{% endblock %}
+    {% endcall %}
+
+  </div>
+  </div>
+
+  {{ snippets.tail() }}
+
+</body>
+</html>
