@@ -10,8 +10,19 @@ def list_of_folder_names():
   with database.database(request.username()) as db:
 
     folders = list(db.select_folders())
+    names = [folder['name'] for folder in folders]
 
-  return response.jsonify([folder['name'] for folder in folders])
+  return response.jsonify(names)
+
+@app.route('/folder/<folder>.json')
+def select_folder_as_json(folder):
+
+  with database.database(request.username()) as db:
+
+    folder = db.select_folder(folder)
+    assert folder
+
+  return response.jsonify(folder)
 
 @app.route('/folder/<folder>')
 def select_folder(folder):

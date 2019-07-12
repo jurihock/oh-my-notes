@@ -4,6 +4,16 @@ from utils import request
 from utils import response
 from utils import database
 
+@app.route('/folder/<folder>/file/<file>.json')
+def select_file_as_json(folder, file):
+
+  with database.database(request.username()) as db:
+
+    file = db.select_file(file)
+    assert file
+
+  return response.jsonify(file)
+
 @app.route('/folder/<folder>/file/<file>')
 def select_file(folder, file):
 
