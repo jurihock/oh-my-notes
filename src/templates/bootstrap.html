@@ -2,6 +2,7 @@
 
 {% import 'snippets.html' as snippets with context %}
 {% import 'dialogs.html' as dialogs with context %}
+{% import 'icons.html' as icons %}
 
 <!doctype html>
 <html lang="en">
@@ -19,19 +20,25 @@
   {{ dialogs.create_folder_dialog() }}
   {{ dialogs.create_file_dialog() }}
 
-  {{ snippets.topnav() }}
+  <div class="container-fluid d-flex flex-column h-100">
 
-  <div class="container-fluid">
-  <div class="row">
+    <div class="row">
+      {{ snippets.topnav() }}
+    </div>
 
-    {{ snippets.sidenav(width=3) }}
+    <div class="row">
+      {{ snippets.asidenav(width=3) }}
+      {{ snippets.mainnav(width=9) }}
+    </div>
 
-    {% call snippets.main(width=9) %}
-      <h4>Main</h4>
-      {% block main %}{% endblock %}
-    {% endcall %}
+    <div class="row d-flex flex-fill">
+      {{ snippets.sidenav(width=3) }}
+      {% call snippets.main(width=9) %}
+        <textarea class="editor"></textarea>
+        {% block main %}{% endblock %}
+      {% endcall %}
+    </div>
 
-  </div>
   </div>
 
   {{ snippets.tail() }}

@@ -26,7 +26,6 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.2.2/dist/latest/bootstrap-autocomplete.min.js"></script>
   <script src="https://craig.global.ssl.fastly.net/js/mousetrap/mousetrap.min.js?a4098"></script>
-  <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 
   <script>
 
@@ -109,19 +108,15 @@
 
 {% macro topnav() %}
 
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow fixed-top topnav">
+  <nav class="col navbar navbar-expand-md navbar-dark bg-dark shadow fixed-top topnav">
     <a class="navbar-brand" href="{{ url_for('index') }}">Oh My Notes!</a>
   </nav>
 
 {% endmacro %}
 
-{% macro sidenav(width) %}
+{% macro asidenav(width) %}
 
-  {% set alt_folders, alt_folders_gradient = folders|shorten(selected.folder, 3) %}
-  {% set alt_files, alt_files_gradient = files|shorten(selected.file, 5) %}
-
-  <nav class="col-{{ width }} bg-light sidenav">
-
+  <nav class="col-{{ width }} bg-light asidenav">
     <div class="btn-group btn-group-sm">
       <button type="button"
               class="btn btn-light"
@@ -138,6 +133,16 @@
         </span>
       </button>
     </div>
+  </nav>
+
+{% endmacro %}
+
+{% macro sidenav(width) %}
+
+  {% set alt_folders, alt_folders_gradient = folders|shorten(selected.folder, 3) %}
+  {% set alt_files, alt_files_gradient = files|shorten(selected.file, 5) %}
+
+  <nav class="col-{{ width }} bg-light sidenav">
 
     <div id="folders-complete" class="{{ 'hide' if alt_folders else '' }}">
     <div class="list-group mt-1">
@@ -379,9 +384,17 @@
 
 {% endmacro %}
 
+{% macro mainnav(width) %}
+
+  <nav class="col-{{ width }} mainnav">
+    <h4>Main</h4>
+  </nav>
+
+{% endmacro %}
+
 {% macro main(width) %}
 
-  <main class="col-{{ width }} offset-{{ 12 - width }}">
+  <main class="col-{{ width }} main">
     {{ caller() }}
   </main>
 
