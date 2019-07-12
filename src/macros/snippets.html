@@ -83,7 +83,10 @@
         $('#create_file_type_lilypond').prop('checked', false);
       });
 
-      $('#create_file_folder').autoComplete({minLength:1});
+      var auto_complete_args = { minLength: 1, noResultsText: '' };
+      $('#create_folder_name').autoComplete(auto_complete_args);
+      $('#create_file_folder').autoComplete(auto_complete_args);
+      $('#create_file_name').autoComplete(auto_complete_args);
 
       Mousetrap.bind('shift+f', function() { $('#create_folder_dialog').modal('show'); }, 'keyup');
       Mousetrap.bind('f', function() { $('#create_file_dialog').modal('show'); }, 'keyup');

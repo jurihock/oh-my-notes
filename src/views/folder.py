@@ -5,12 +5,13 @@ from utils import response
 from utils import database
 
 @app.route('/folder/names.json')
-def list_of_folder_names():
+def suggest_folder_name():
+
+  q = request.str('q')
 
   with database.database(request.username()) as db:
 
-    folders = list(db.select_folders())
-    names = [folder['name'] for folder in folders]
+    names = list(db.suggest_folder_name(q))
 
   return response.jsonify(names)
 

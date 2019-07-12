@@ -24,6 +24,15 @@ class database:
       self.mongo.close()
       self.mongo = None
 
+  def suggest_folder_name(self, q=None):
+
+    folders = self.db.folders \
+      .find({'name': re.compile(re.escape(q), re.IGNORECASE)} if q else {}) \
+      .sort('name', ASCENDING)
+
+    for folder in folders:
+      yield folder['name']
+
   def select_folders(self):
 
     folders = self.db.folders.find().sort('name', ASCENDING)
@@ -89,6 +98,15 @@ class database:
 
     self.db.folders.delete_one({'_id': ObjectId(folder['id'])})
     return folder
+
+  def suggest_file_name(self, q):
+
+    files = self.db.files \
+      .find({'name': re.compile(re.escape(q), re.IGNORECASE)} if q else {}) \
+      .sort('name', ASCENDING)
+
+    for file in files:
+      yield file['name']
 
   def select_files(self, folder):
 

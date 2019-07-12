@@ -4,6 +4,17 @@ from utils import request
 from utils import response
 from utils import database
 
+@app.route('/file/names.json')
+def suggest_file_name():
+
+  q = request.str('q')
+
+  with database.database(request.username()) as db:
+
+    names = list(db.suggest_file_name(q))
+
+  return response.jsonify(names)
+
 @app.route('/folder/<folder>/file/<file>.json')
 def select_file_as_json(folder, file):
 
