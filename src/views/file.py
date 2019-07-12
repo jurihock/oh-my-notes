@@ -15,15 +15,23 @@ def suggest_file_name():
 
   return response.jsonify(names)
 
-@app.route('/folder/<folder>/file/<file>.json')
-def select_file_as_json(folder, file):
+@app.route('/folder/<folder>/file/<file>.<format>')
+def download_file(folder, file, format):
 
   with database.database(request.username()) as db:
 
     file = db.select_file(file)
     assert file
 
-  return response.jsonify(file)
+  if format == 'json':
+
+    return response.json(file, file['name'] + '.json')
+
+  if format == 'txt':
+
+    return response.txt(file['value'] or '', file['name'] + '.txt')
+
+  return response.error(404)
 
 @app.route('/folder/<folder>/file/<file>')
 def select_file(folder, file):

@@ -15,15 +15,19 @@ def suggest_folder_name():
 
   return response.jsonify(names)
 
-@app.route('/folder/<folder>.json')
-def select_folder_as_json(folder):
+@app.route('/folder/<folder>.<format>')
+def download_folder(folder, format):
 
   with database.database(request.username()) as db:
 
     folder = db.select_folder(folder)
     assert folder
 
-  return response.jsonify(folder)
+  if format == 'json':
+
+    return response.json(folder, folder['name'] + '.json')
+
+  return response.error(404)
 
 @app.route('/folder/<folder>')
 def select_folder(folder):
