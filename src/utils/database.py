@@ -60,6 +60,11 @@ class database:
 
     assert name and isinstance(name, str)
 
+    folder = self.select_folder(name)
+    
+    if folder:
+      return folder
+
     folder = \
     {
       'name': name
