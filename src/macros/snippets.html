@@ -387,7 +387,22 @@
 {% macro mainnav(width) %}
 
   <nav class="col-{{ width }} mainnav">
-    <h4>Main</h4>
+
+    <div class="d-flex justify-content-between flex-wrap align-items-center">
+
+      {% if selected.file.id %}
+        <h3>{{ selected.folder.name }} / {{ selected.file.name }}</h3>
+        <div class="btn-toolbar">
+          <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="$('#selected_file_form').submit()">Save</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">Download</button>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary">Preview</button>
+        </div>
+      {% endif %}
+
+    </div>
+
   </nav>
 
 {% endmacro %}
@@ -395,6 +410,36 @@
 {% macro main(width) %}
 
   <main class="col-{{ width }} main">
+
+    {% if selected.file.id %}
+      <form class="size-hundred-percent"
+            id="selected_file_form"
+            action="{{ url_for('update_file', file=selected.file.id or '') }}">
+        <textarea class="size-hundred-percent"
+                  id="selected_file_value"
+                  name="value"
+                  >{{ selected.file.value or '' }}</textarea>
+      </form>
+    {% elif selected.folder.id %}
+      <div class="size-hundred-percent">
+        <button type="button"
+                class="btn btn-outline-primary btn-lg center"
+                style="padding:1.5rem"
+                data-toggle="modal" data-target="#create_file_dialog">
+          Add first file to {{ selected.folder.name }}...
+        </button>
+      </div>
+    {% else %}
+      <div class="size-hundred-percent">
+        <button type="button"
+                class="btn btn-outline-primary btn-lg center"
+                style="padding:1.5rem"
+                data-toggle="modal" data-target="#create_folder_dialog">
+          Add your first folder...
+        </button>
+      </div>
+    {% endif %}
+
     {{ caller() }}
   </main>
 

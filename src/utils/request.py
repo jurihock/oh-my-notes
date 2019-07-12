@@ -9,6 +9,10 @@ def agent(): return flask.request.user_agent.string
 def isget():  return flask.request.method == 'GET'
 def ispost(): return flask.request.method == 'POST'
 
+def contains(key):
+
+  return key in flask.request.values.keys()
+
 def has(key):
 
     from builtins import bool as __bool__

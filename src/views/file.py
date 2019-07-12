@@ -65,12 +65,9 @@ def create_file():
 
   with database.database(request.username()) as db:
 
-    folder = db.select_folder(folder)
-    assert folder
-
     file = db.create_file(folder, name, type)
 
-  return response.redirect('select_file', folder=folder['id'], file=file['id'])
+  return response.redirect('select_file', folder=file['folder']['id'], file=file['id'])
 
 @app.route('/file/<file>/delete')
 def delete_file(file):
@@ -81,3 +78,17 @@ def delete_file(file):
     folder = file['folder']['id']
 
   return response.redirect('select_folder', folder=folder)
+
+@app.route('/file/<file>/update')
+def update_file(file):
+
+  kwargs = {}
+
+  if request.contains('value'):
+    kwargs['value'] = request.str('value', default='').strip()
+
+  with database.database(request.username()) as db:
+
+    file = db.update_file(file, **kwargs)
+
+  return response.redirect('select_file', folder=file['folder']['id'], file=file['id'])

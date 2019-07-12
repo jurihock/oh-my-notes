@@ -1,4 +1,4 @@
-from pymongo import MongoClient, ASCENDING
+from pymongo import MongoClient, ReturnDocument, ASCENDING
 from bson.objectid import ObjectId
 
 import re
@@ -180,4 +180,24 @@ class database:
     assert file
 
     self.db.files.delete_one({'_id': ObjectId(file['id'])})
+    return file
+
+  def update_file(self, file, **kwargs):
+
+    file = self.select_file(file)
+    assert file
+
+    if not kwargs:
+      return file
+
+    file = self.db.files.find_one_and_update(
+      {'_id': ObjectId(file['id'])},
+      {'$set': kwargs},
+      upsert=False,
+      return_document=ReturnDocument.AFTER)
+
+    file['id'] = str(file['_id'])
+    del file['_id']
+    file['folder']['id'] = str(file['folder']['_id'])
+    del file['folder']['_id']
     return file
