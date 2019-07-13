@@ -6,29 +6,29 @@
 
   <form action="{{ url_for('create_folder') }}">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Add new folder</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+    <div class="modal-header">
+      <h5 class="modal-title">Add new folder</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
 
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="create_folder_name" class="col-form-label">Name of the new folder:</label>
-          <input type="text" class="form-control"
-                 id="create_folder_name" name="name"
-                 autocomplete="off" data-url="{{ url_for('suggest_folder_name') }}"
-                 required/>
-        </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="create_folder_name" class="col-form-label">Name of the new folder:</label>
+        <input type="text" class="form-control"
+               id="create_folder_name" name="name"
+               autocomplete="off" data-url="{{ url_for('suggest_folder_name') }}"
+               required/>
       </div>
+    </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Don't add</button>
-        <button type="submit" class="btn btn-primary">Add</button>
-      </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">Don't add</button>
+      <button type="submit" class="btn btn-primary">Add</button>
+    </div>
 
-    </form>
+  </form>
 
 </div>
 </div>
@@ -44,49 +44,72 @@
 
   <form action="{{ url_for('create_file') }}">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Add new file</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+    <div class="modal-header">
+      <h5 class="modal-title">Add new file</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
 
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="create_file_folder" class="col-form-label">Name of the file folder:</label>
-          <input type="text" class="form-control"
-                 id="create_file_folder" name="folder"
-                 autocomplete="off" data-url="{{ url_for('suggest_folder_name') }}"
-                 required/>
-        </div>
-        <div class="form-group">
-          <label for="create_file_name" class="col-form-label">Name of the new file:</label>
-          <input type="text" class="form-control"
-                 id="create_file_name" name="name"
-                 autocomplete="off" data-url="{{ url_for('suggest_file_name') }}"
-                 required/>
-        </div>
-        <div class="custom-control custom-radio custom-control-inline">
-          <input type="radio" class="custom-control-input"
-                 id="create_file_type_markdown" name="type"
-                 value="markdown"
-                 checked/>
-          <label class="custom-control-label" for="create_file_type_markdown">Markdown file</label>
-        </div>
-        <div class="custom-control custom-radio custom-control-inline">
-          <input type="radio" class="custom-control-input"
-                 id="create_file_type_lilypond" name="type"
-                 value="lilypond"/>
-          <label class="custom-control-label" for="create_file_type_lilypond">LilyPond file</label>
-        </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="create_file_folder" class="col-form-label">Name of the file folder:</label>
+        <input type="text" class="form-control"
+               id="create_file_folder" name="folder"
+               autocomplete="off" data-url="{{ url_for('suggest_folder_name') }}"
+               required/>
       </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Don't add</button>
-        <button type="submit" class="btn btn-primary">Add</button>
+      <div class="form-group">
+        <label for="create_file_name" class="col-form-label">Name of the new file:</label>
+        <input type="text" class="form-control"
+               id="create_file_name" name="name"
+               autocomplete="off" data-url="{{ url_for('suggest_file_name') }}"
+               required/>
       </div>
+      <div class="custom-control custom-radio custom-control-inline">
+        <input type="radio" class="custom-control-input"
+               id="create_file_type_markdown" name="type"
+               value="markdown"
+               checked/>
+        <label class="custom-control-label" for="create_file_type_markdown">Markdown file</label>
+      </div>
+      <div class="custom-control custom-radio custom-control-inline">
+        <input type="radio" class="custom-control-input"
+               id="create_file_type_lilypond" name="type"
+               value="lilypond"/>
+        <label class="custom-control-label" for="create_file_type_lilypond">LilyPond file</label>
+      </div>
+    </div>
 
-    </form>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">Don't add</button>
+      <button type="submit" class="btn btn-primary">Add</button>
+    </div>
+
+  </form>
+
+</div>
+</div>
+</div>
+
+{% endmacro %}
+
+{% macro preview_file_dialog() %}
+
+<div class="modal" tabindex="-1" role="dialog" id="preview_file_dialog">
+<div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+<div class="modal-content">
+
+  <div class="modal-header">
+    <h5 class="modal-title">{{ selected.folder.name }} / {{ selected.file.name }}</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <div id="preview_file_container" data-url="{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id, name=selected.file.name) }}"></div>
+  </div>
 
 </div>
 </div>

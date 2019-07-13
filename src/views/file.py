@@ -3,6 +3,7 @@ from app import app
 from utils import request
 from utils import response
 from utils import database
+from utils import compile
 
 @app.route('/file/names.json')
 def suggest_file_name():
@@ -31,7 +32,23 @@ def download_file(folder, file, format):
 
     return response.txt(file['value'] or '', file['name'] + '.txt')
 
+  if format == 'pdf':
+
+    data = compile.markdown(file['id'], file['value'])
+    return response.pdf(data, file['name'] + '.pdf')
+
   return response.error(404)
+
+@app.route('/folder/<folder>/file/<file>/<name>.pdf')
+def preview_file(folder, file, name):
+
+  with database.database(request.username()) as db:
+
+    file = db.select_file(file)
+    assert file
+
+  data = compile.markdown(file['id'], file['value'])
+  return response.pdf(data)
 
 @app.route('/folder/<folder>/file/<file>')
 def select_file(folder, file):

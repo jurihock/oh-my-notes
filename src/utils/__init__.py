@@ -1,1 +1,1 @@
-__all__ = [ 'database', 'filters', 'request', 'response' ]
+__all__ = [ 'compile', 'database', 'filters', 'request', 'response' ]

@@ -17,15 +17,15 @@ def template(name, **kwargs):
 
 def file(data, filename=None, mimetype=None):
 
-    headers = {} if not filename else \
-    {
-        'Content-Disposition':
-            'attachment;filename="{0}"'.format(filename)
-    }
+    response = flask.make_response(data)
 
-    return Response(response=data,
-                    headers=headers,
-                    mimetype=mimetype)
+    if filename:
+      response.headers.set('Content-Disposition', 'attachment', filename=filename)
+
+    if mimetype:
+      response.headers.set('Content-Type', mimetype)
+
+    return response
 
 def jsonify(*args, **kwargs):
 
