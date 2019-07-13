@@ -99,8 +99,8 @@
       $('#create_file_folder').autoComplete(auto_complete_args);
       $('#create_file_name').autoComplete(auto_complete_args);
 
-      Mousetrap.bind('alt+shift+f', function() { $('#create_folder_dialog').modal('show'); }, 'keyup');
-      Mousetrap.bind('alt+f', function() { $('#create_file_dialog').modal('show'); }, 'keyup');
+      Mousetrap.bind('alt+m', function() { $('#create_folder_dialog').modal('show'); }, 'keyup');
+      Mousetrap.bind('alt+n', function() { $('#create_file_dialog').modal('show'); }, 'keyup');
       Mousetrap.bind('alt+e', function() { $('#selected_file_value').trigger('focus'); }, 'keyup');
       Mousetrap.bind('alt+v', function() { $('#preview_file_dialog').modal('show'); }, 'keyup');
     });
