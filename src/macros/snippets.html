@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"/>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}"/>
@@ -25,6 +26,7 @@
   <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.2.2/dist/latest/bootstrap-autocomplete.min.js"></script>
   <script src="https://craig.global.ssl.fastly.net/js/mousetrap/mousetrap.min.js?a4098"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.js" integrity="sha256-vZy89JbbMLTO6cMnTZgZKvZ+h4EFdvPFupTQGyiVYZg=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
   <script>
 
@@ -103,6 +105,12 @@
       Mousetrap.bind('alt+n', function() { $('#create_file_dialog').modal('show'); }, 'keyup');
       Mousetrap.bind('alt+e', function() { $('#selected_file_value').trigger('focus'); }, 'keyup');
       Mousetrap.bind('alt+v', function() { $('#preview_file_dialog').modal('show'); }, 'keyup');
+
+      toastr.options =
+      {
+        positionClass: 'toast-top-right',
+        timeOut: 3000
+      };
     });
 
     $(function()
@@ -111,21 +119,33 @@
       {
         event.preventDefault();
 
+        var type = $(this).attr('method');
         var url = $(this).attr('action');
         var data = $(this).serialize();
+        var timeout = 3000; // ms
 
+        $('#selected_file_value').attr('disabled', true);
         $('#selected_file_form_submit_button').attr('disabled', true);
 
-        $.ajax({ type: 'post', url: url, data: data })
+        $.ajax({ type: type, url: url, data: data, timeout: timeout })
         .done(function()
         {
+          toastr.success('The file „{{ selected.folder.name }} / {{ selected.file.name }}“ was saved.', null, { timeOut: 1500 });
         })
-        .fail(function()
+        .fail(function(jqxhr)
         {
-          alert('Unable to save selected file!');
+          if (jqxhr.statusText == 'timeout')
+          {
+            toastr.error('Unable to save the file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to a timeout!', null);
+          }
+          else
+          {
+            toastr.error('Unable to save the file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to ' + jqxhr.responseText + '!', null);
+          }
         })
         .always(function()
         {
+          $('#selected_file_value').attr('disabled', false);
           $('#selected_file_form_submit_button').attr('disabled', false);
         });
       });
@@ -467,6 +487,7 @@
     {% if selected.file.id %}
       <form class="size-hundred-percent"
             id="selected_file_form"
+            method="post"
             action="{{ url_for('update_file', file=selected.file.id) }}">
         <textarea class="size-hundred-percent"
                   id="selected_file_value"
