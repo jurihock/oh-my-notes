@@ -107,6 +107,32 @@
 
     $(function()
     {
+      $('#selected_file_form').on('submit', function(event)
+      {
+        event.preventDefault();
+
+        var url = $(this).attr('action');
+        var data = $(this).serialize();
+
+        $('#selected_file_form_submit_button').attr('disabled', true);
+
+        $.ajax({ type: 'post', url: url, data: data })
+        .done(function()
+        {
+        })
+        .fail(function()
+        {
+          alert('Unable to save selected file!');
+        })
+        .always(function()
+        {
+          $('#selected_file_form_submit_button').attr('disabled', false);
+        });
+      });
+    });
+
+    $(function()
+    {
       $('button[data-href]').on('click', function()
       {
         var href = $(this).attr('data-href');
@@ -402,12 +428,14 @@
 
   <nav class="col-{{ width }} mainnav">
 
-    <div class="d-flex justify-content-between flex-wrap align-items-center">
+    {% if selected.file.id %}
 
-      {% if selected.file.id %}
+      <div class="d-flex justify-content-between flex-wrap align-items-center">
+
         <h3>{{ selected.folder.name }} / {{ selected.file.name }}</h3>
         <div class="btn-group">
           <button type="button" class="btn btn-sm btn-outline-secondary"
+                  id="selected_file_form_submit_button"
                   onclick="$('#selected_file_form').submit()">Save</button>
           <button type="button" class="btn btn-sm btn-outline-secondary"
                   data-toggle="modal" data-target="#preview_file_dialog">Preview</button>
@@ -423,9 +451,10 @@
             </a>
           </div>
         </div>
-      {% endif %}
 
-    </div>
+      </div>
+
+    {% endif %}
 
   </nav>
 

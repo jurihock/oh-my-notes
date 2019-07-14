@@ -104,7 +104,7 @@ def delete_file(file):
 
   return response.redirect('select_folder', folder=folder)
 
-@app.route('/file/<file>/update')
+@app.route('/file/<file>/update', methods=['GET', 'POST'])
 def update_file(file):
 
   kwargs = {}
