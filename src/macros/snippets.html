@@ -541,9 +541,9 @@
             id="selected_file_form"
             method="post"
             action="{{ url_for('update_file', file=selected.file.id) }}">
-        <textarea id="selected_file_value" name="value" class="size-hundred-percent"
+        <textarea id="selected_file_value" name="value" class="form-control size-hundred-percent"
                   >{{ selected.file.value or '' }}</textarea>
-        <div id="selected_file_preview" class="invisible"></div>
+        <div id="selected_file_preview" class="form-control invisible"></div>
       </form>
     {% elif selected.folder.id %}
       <div class="size-hundred-percent">
