@@ -104,44 +104,6 @@
 
     $(function()
     {
-      $('#selected_file_form').on('submit', function(event)
-      {
-        event.preventDefault();
-
-        var type = $(this).attr('method');
-        var url = $(this).attr('action');
-        var data = $(this).serialize();
-        var timeout = 3000; // ms
-
-        $('#selected_file_value').attr('disabled', true);
-        $('#selected_file_form_submit_button').attr('disabled', true);
-
-        $.ajax({ type: type, url: url, data: data, timeout: timeout })
-        .done(function()
-        {
-          toastr.success('The file „{{ selected.folder.name }} / {{ selected.file.name }}“ was saved.', null, { timeOut: 1500 });
-        })
-        .fail(function(jqxhr)
-        {
-          if (jqxhr.statusText == 'timeout')
-          {
-            toastr.error('Unable to save file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to a timeout!', null);
-          }
-          else
-          {
-            toastr.error('Unable to save file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to ' + jqxhr.responseText + '!', null);
-          }
-        })
-        .always(function()
-        {
-          $('#selected_file_value').attr('disabled', false);
-          $('#selected_file_form_submit_button').attr('disabled', false);
-        });
-      });
-    });
-
-    $(function()
-    {
       $('button[data-href]').on('click', function()
       {
         var href = $(this).attr('data-href');
@@ -319,7 +281,7 @@
           <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action active">
             <div class="d-flex w-100 justify-content-between">
               <span class="clip">{{ file.name }}</span>
-              <small>{{ file.age }}</small>
+              <small>{{ file.type }}</small>
             </div>
             <div class="btn-group btn-group-sm mt-3">
               <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Rename this file...">
@@ -339,7 +301,7 @@
           <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
               <span class="clip">{{ file.name }}</span>
-              <small class="text-muted">{{ file.age }}</small>
+              <small class="text-muted">{{ file.type }}</small>
             </div>
           </a>
 
@@ -374,7 +336,7 @@
             <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action active">
               <div class="d-flex w-100 justify-content-between">
                 <span class="clip">{{ file.name }}</span>
-                <small>{{ file.age }}</small>
+                <small>{{ file.type }}</small>
               </div>
               <div class="btn-group btn-group-sm mt-3">
                 <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="bottom" title="Rename this file...">
@@ -394,7 +356,7 @@
             <a href="{{ url_for('select_file', folder=file.folder.id, file=file.id) }}" class="list-group-item list-group-item-action">
               <div class="d-flex w-100 justify-content-between">
                 <span class="clip">{{ file.name }}</span>
-                <small class="text-muted">{{ file.age }}</small>
+                <small class="text-muted">{{ file.type }}</small>
               </div>
             </a>
 
@@ -470,50 +432,94 @@
       </div>
 
       <script>
-        function save_selected_file_value()
+
+        function save_selected_file_value(callback)
         {
-          $('#selected_file_form').submit();
+          var form = $('#selected_file_form');
+          var type = form.attr('method');
+          var url = form.attr('action');
+          var data = form.serialize();
+          var timeout = 3000; // ms
+
+          $('#selected_file_value').attr('disabled', true);
+          $('#selected_file_form_submit_button').attr('disabled', true);
+
+          $.ajax({ type: type, url: url, data: data, timeout: timeout })
+          .done(function()
+          {
+            if (callback)
+            {
+              callback();
+            }
+            else
+            {
+              toastr.success('The file „{{ selected.folder.name }} / {{ selected.file.name }}“ was saved.', null, { timeOut: 1500 });
+            }
+          })
+          .fail(function(jqxhr)
+          {
+            if (jqxhr.statusText == 'timeout')
+            {
+              toastr.error('Unable to save file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to a timeout!', null);
+            }
+            else
+            {
+              toastr.error('Unable to save file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to ' + jqxhr.responseText + '!', null);
+            }
+          })
+          .always(function()
+          {
+            $('#selected_file_value').attr('disabled', false);
+            $('#selected_file_form_submit_button').attr('disabled', false);
+          });
         }
+
         function show_selected_file_preview()
         {
-          $('#selected_file_edit_button_group').removeClass('visible').addClass('invisible').hide();
-          $('#selected_file_preview_button_group').removeClass('invisible').addClass('visible').show();
-
-          $('#selected_file_edit_button_group');
-          $('#selected_file_preview_button_group');
-
-          $('#selected_file_value').removeClass('visible').addClass('invisible').removeClass('size-hundred-percent').hide();
-          $('#selected_file_preview').removeClass('invisible').addClass('visible').addClass('size-hundred-percent').show();
-
-          var primaryUrl = '{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id, name=selected.file.name) }}';
-          var secondaryUrl = '{{ url_for('download_file', folder=selected.folder.id, file=selected.file.id, format='pdf') }}';
-
-          var args =
+          var callback = function()
           {
-            id: '{{ selected.file.id }}',
-            fallbackLink:
-            [
-              '<p>',
-              'Your browser does not support inline PDFs.',
-              'Please download the PDF <a href="' + secondaryUrl + '">' + secondaryUrl + '</a> to view it.',
-              '</p>'
-            ].join(' '),
-            pdfOpenParams:
+            $('#selected_file_edit_button_group').removeClass('visible').addClass('invisible').hide();
+            $('#selected_file_preview_button_group').removeClass('invisible').addClass('visible').show();
+
+            $('#selected_file_edit_button_group');
+            $('#selected_file_preview_button_group');
+
+            $('#selected_file_value').removeClass('visible').addClass('invisible').removeClass('size-hundred-percent').hide();
+            $('#selected_file_preview').removeClass('invisible').addClass('visible').addClass('size-hundred-percent').show();
+
+            var primaryUrl = '{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id, name=selected.file.name) }}';
+            var secondaryUrl = '{{ url_for('download_file', folder=selected.folder.id, file=selected.file.id, format='pdf') }}';
+
+            var args =
             {
-              navpanes: 0,
-              toolbar: 0,
-              statusbar: 0,
-              view: 'FitH'
+              id: '{{ selected.file.id }}',
+              fallbackLink:
+              [
+                '<p>',
+                'Your browser does not support inline PDFs.',
+                'Please download the PDF <a href="' + secondaryUrl + '">' + secondaryUrl + '</a> to view it.',
+                '</p>'
+              ].join(' '),
+              pdfOpenParams:
+              {
+                navpanes: 0,
+                toolbar: 0,
+                statusbar: 0,
+                view: 'FitH'
+              }
+            };
+
+            var pdf = PDFObject.embed(primaryUrl, '#selected_file_preview', args);
+
+            if (!pdf)
+            {
+              toastr.error('Unable to embed PDF preview of file „{{ selected.folder.name }} / {{ selected.file.name }}“!', null);
             }
           };
 
-          var pdf = PDFObject.embed(primaryUrl, '#selected_file_preview', args);
-
-          if (!pdf)
-          {
-            toastr.error('Unable to embed PDF preview of file „{{ selected.folder.name }} / {{ selected.file.name }}“!', null);
-          }
+          save_selected_file_value(callback);
         }
+
         function hide_selected_file_preview()
         {
           $('#selected_file_edit_button_group').removeClass('invisible').addClass('visible').show();
@@ -524,6 +530,7 @@
 
           $('#selected_file_value').trigger('focus');
         }
+
       </script>
 
     {% endif %}

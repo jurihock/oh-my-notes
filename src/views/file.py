@@ -34,7 +34,7 @@ def download_file(folder, file, format):
 
   if format == 'pdf':
 
-    data = compile.markdown(file['id'], file['value'])
+    data = compile.auto(file['type'], file['id'], file['value'])
     return response.pdf(data, file['name'] + '.pdf')
 
   return response.error(404)
@@ -47,7 +47,7 @@ def preview_file(folder, file, name):
     file = db.select_file(file)
     assert file
 
-  data = compile.markdown(file['id'], file['value'])
+  data = compile.auto(file['type'], file['id'], file['value'])
   return response.pdf(data)
 
 @app.route('/folder/<folder>/file/<file>')
