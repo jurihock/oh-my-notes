@@ -5,6 +5,8 @@ from utils import response
 from utils import database
 from utils import compile
 
+import base64
+
 @app.route('/file/names.json')
 def suggest_file_name():
 
@@ -39,8 +41,8 @@ def download_file(folder, file, format):
 
   return response.error(404)
 
-@app.route('/folder/<folder>/file/<file>/<name>.pdf')
-def preview_file(folder, file, name):
+@app.route('/folder/<folder>/file/<file>.base64.pdf')
+def preview_file(folder, file):
 
   with database.database(request.username()) as db:
 
@@ -48,7 +50,9 @@ def preview_file(folder, file, name):
     assert file
 
   data = compile.auto(file['type'], file['id'], file['value'])
-  return response.pdf(data)
+  data = base64.b64encode(data)
+
+  return data
 
 @app.route('/folder/<folder>/file/<file>')
 def select_file(folder, file):

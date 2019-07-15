@@ -20,6 +20,9 @@
 
 {% macro tail() %}
 
+  <!--<script src="{{ url_for('static', filename='js/require.js') }}"></script>-->
+  <!--<script>requirejs.config({ baseUrl: '/' });</script>-->
+
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
@@ -405,7 +408,7 @@
 
         <h3>{{ selected.folder.name }} / {{ selected.file.name }}</h3>
         <div class="btn-toolbar">
-        <div class="btn-group invisible" id="selected_file_preview_button_group">
+        <div class="btn-group hide" id="selected_file_preview_button_group">
           <button type="button" class="btn btn-sm btn-secondary"
                   onclick="hide_selected_file_preview()">Edit</button>
         </div>
@@ -432,6 +435,30 @@
       </div>
 
       <script>
+
+        // https://stackoverflow.com/a/47934160
+        function convert_base64_string_to_blob(base64string, mimetype)
+        {
+          var bytes = atob(base64string);
+          var buffer = [];
+
+          for (let offset = 0; offset < bytes.length; offset += 512)
+          {
+            var slice = bytes.slice(offset, offset + 512);
+            var chars = new Array(slice.length);
+
+            for (let i = 0; i < slice.length; i++)
+            {
+              chars[i] = slice.charCodeAt(i);
+            }
+
+            var array = new Uint8Array(chars);
+            buffer.push(array);
+          }
+
+          var blob = new Blob(buffer, { type: mimetype });
+          return blob;
+        }
 
         function save_selected_file_value(callback)
         {
@@ -478,43 +505,81 @@
         {
           var callback = function()
           {
-            $('#selected_file_edit_button_group').removeClass('visible').addClass('invisible').hide();
-            $('#selected_file_preview_button_group').removeClass('invisible').addClass('visible').show();
+            $('#selected_file_preview').html(
+            [
+              '<div class="center" style="width:50%">',
+              '<div class="progress" style="height:1.5rem">',
+              '<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%">Creating preview for the „{{ selected.folder.name }} / {{ selected.file.name }}“...</div>',
+              '</div>',
+              '</div>'
+            ].join('\n'));
+
+            $('#selected_file_edit_button_group').hide();
+            $('#selected_file_preview_button_group').show();
 
             $('#selected_file_edit_button_group');
             $('#selected_file_preview_button_group');
 
-            $('#selected_file_value').removeClass('visible').addClass('invisible').removeClass('size-hundred-percent').hide();
-            $('#selected_file_preview').removeClass('invisible').addClass('visible').addClass('size-hundred-percent').show();
+            $('#selected_file_value').removeClass('size-hundred-percent').hide();
+            $('#selected_file_preview').addClass('size-hundred-percent').fadeIn(250);
 
-            var primaryUrl = '{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id, name=selected.file.name) }}';
+            var primaryUrl = '{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id) }}';
             var secondaryUrl = '{{ url_for('download_file', folder=selected.folder.id, file=selected.file.id, format='pdf') }}';
 
-            var args =
+            $.ajax({ dataType: 'text', url: primaryUrl, timeout: 10000 })
+            .done(function(data)
             {
-              id: '{{ selected.file.id }}',
-              fallbackLink:
-              [
-                '<p>',
-                'Your browser does not support inline PDFs.',
-                'Please download the PDF <a href="' + secondaryUrl + '">' + secondaryUrl + '</a> to view it.',
-                '</p>'
-              ].join(' '),
-              pdfOpenParams:
+              data = URL.createObjectURL(convert_base64_string_to_blob(data, 'application/pdf'));
+
+              var args =
               {
-                navpanes: 0,
-                toolbar: 0,
-                statusbar: 0,
-                view: 'FitH'
-              }
-            };
+                id: '{{ selected.file.id }}',
+                fallbackLink:
+                [
+                  '<p>',
+                  'It seems like your browser does not support online PDF viewing.',
+                  'Please download the <a href="' + secondaryUrl + '">PDF</a> to view it offline.',
+                  '</p>'
+                ].join(' '),
+                pdfOpenParams:
+                {
+                  messages: 0,
+                  navpanes: 0,
+                  scrollbar: 0,
+                  statusbar: 0,
+                  toolbar: 0,
+                  view: 'FitH'
+                }
+              };
 
-            var pdf = PDFObject.embed(primaryUrl, '#selected_file_preview', args);
+              $('#selected_file_preview').fadeOut(150, function()
+              {
+                $('#selected_file_preview').addClass('form-control');
+                $('#selected_file_preview').html('');
 
-            if (!pdf)
+                var pdf = PDFObject.embed(data, '#selected_file_preview', args);
+
+                if (!pdf)
+                {
+                  toastr.error('Unable to create preview for the file „{{ selected.folder.name }} / {{ selected.file.name }}“!', null);
+                }
+
+                $('#selected_file_preview').fadeIn(850);
+              });
+            })
+            .fail(function(jqxhr)
             {
-              toastr.error('Unable to embed PDF preview of file „{{ selected.folder.name }} / {{ selected.file.name }}“!', null);
-            }
+              if (jqxhr.statusText == 'timeout')
+              {
+                toastr.error('Unable to create preview for the file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to a timeout!', null);
+              }
+              else
+              {
+                toastr.error('Unable to create preview for the file „{{ selected.folder.name }} / {{ selected.file.name }}“ due to ' + jqxhr.responseText + '!', null);
+              }
+
+              hide_selected_file_preview();
+            });
           };
 
           save_selected_file_value(callback);
@@ -522,11 +587,14 @@
 
         function hide_selected_file_preview()
         {
-          $('#selected_file_edit_button_group').removeClass('invisible').addClass('visible').show();
-          $('#selected_file_preview_button_group').removeClass('visible').addClass('invisible').hide();
+          $('#selected_file_edit_button_group').show();
+          $('#selected_file_preview_button_group').hide();
 
-          $('#selected_file_value').removeClass('invisible').addClass('visible').addClass('size-hundred-percent').show();
-          $('#selected_file_preview').removeClass('visible').addClass('invisible').removeClass('size-hundred-percent').hide();
+          $('#selected_file_preview').removeClass('size-hundred-percent').hide();
+          $('#selected_file_value').addClass('size-hundred-percent').fadeIn(250);
+
+          $('#selected_file_preview').removeClass('form-control');
+          $('#selected_file_preview').html('');
 
           $('#selected_file_value').trigger('focus');
         }
@@ -548,9 +616,9 @@
             id="selected_file_form"
             method="post"
             action="{{ url_for('update_file', file=selected.file.id) }}">
-        <textarea id="selected_file_value" name="value" class="form-control size-hundred-percent"
+        <textarea id="selected_file_value" name="value" class="form-control size-hundred-percent hide"
                   >{{ selected.file.value or '' }}</textarea>
-        <div id="selected_file_preview" class="form-control invisible"></div>
+        <div id="selected_file_preview" class="size-hundred-percent hide"></div>
       </form>
     {% elif selected.folder.id %}
       <div class="size-hundred-percent">
