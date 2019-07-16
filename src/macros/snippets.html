@@ -1,7 +1,9 @@
 {% import 'scripts.js' as scripts with context %}
 {% import 'icons.html' as icons %}
 
-{% set modules = [ 'bootstrap', 'bootstrap-autocomplete', 'jquery', 'mousetrap', 'pdfobject', 'toastr' ] %}
+{% set modules = dict() %}
+{% do modules.update({'js': ['bootstrap', 'jquery', 'mousetrap', 'pdfobject', 'selectize', 'toastr']}) %}
+{% do modules.update({'css': ['selectize']}) %}
 
 {% macro head() %}
 
@@ -11,8 +13,12 @@
 
   <link rel="icon" href="data:,"/>
 
-  {% for module in modules %}
+  {% for module in modules['js'] %}
   <link rel="stylesheet" href="{{ url_for('static', filename='js/%s/%s.css'|format(module, module)) }}"/>
+  {% endfor %}
+
+  {% for module in modules['css'] %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/%s/%s.css'|format(module, module)) }}"/>
   {% endfor %}
 
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"/>
@@ -23,7 +29,7 @@
   <script src="{{ url_for('static', filename='js/require.js') }}"></script>
   <script>requirejs.config({ baseUrl: '/' });</script>
 
-  {% for module in modules %}
+  {% for module in modules['js'] %}
   <script src="{{ url_for('static', filename='js/%s/%s.js'|format(module, module)) }}"></script>
   {% endfor %}
 

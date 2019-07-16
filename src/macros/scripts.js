@@ -35,37 +35,60 @@
     });
   });
 
-  require(['jquery', 'bootstrap', 'bootstrap-autocomplete'], function()
+  require(['jquery', 'bootstrap', 'selectize'], function()
   {
     $(function()
     {
-      $('#create_folder_dialog').on('shown.bs.modal', function()
-      {
-        $('#create_folder_name').trigger('focus');
-      });
-
-      $('#create_file_dialog').on('shown.bs.modal', function()
-      {
-        $('#create_file_name').trigger('focus');
-      });
-
       $('#create_folder_dialog').on('show.bs.modal', function()
       {
-        $('#create_folder_name').val('');
+        $('#create_folder_name').data('selectize').setValue('');
+      });
+
+      $('#create_folder_dialog').on('shown.bs.modal', function()
+      {
+        $('#create_folder_name').data('selectize').focus();
       });
 
       $('#create_file_dialog').on('show.bs.modal', function()
       {
-        $('#create_file_folder').val('{{ selected.folder.name }}');
+        $('#create_file_folder').data('selectize').setValue('{{ selected.folder.name }}');
         $('#create_file_name').val('');
         $('#create_file_type_markdown').prop('checked', true);
         $('#create_file_type_lilypond').prop('checked', false);
       });
 
-      var auto_complete_args = { minLength: 1, noResultsText: '' };
-      $('#create_folder_name').autoComplete(auto_complete_args);
-      $('#create_file_folder').autoComplete(auto_complete_args);
-      $('#create_file_name').autoComplete(auto_complete_args);
+      $('#create_file_dialog').on('shown.bs.modal', function()
+      {
+        $('#create_file_name').focus();
+      });
+
+      for (let id of [ '#create_folder_name', '#create_file_folder' ])
+      {
+        $(id).selectize(
+        {
+          labelField: 'value',
+          valueField: 'value',
+          searchField: 'value',
+          maxItems: 1,
+          openOnFocus: false,
+          closeAfterSelect: true,
+          selectOnTab: true,
+          create: true,
+          persist: true,
+          preload: true,
+          load: function(query, callback)
+          {
+            $.ajax(
+            {
+              url: $(id).attr('data-url'),
+              data: { q: query },
+              dataType: 'json'
+            })
+            .done(function(data) { callback( data.map(value=>({value})) ); })
+            .fail(function() { callback(); })
+          }
+        });
+      }
     });
   });
 
