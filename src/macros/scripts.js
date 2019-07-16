@@ -2,11 +2,6 @@
 
   <script>
 
-  function setup_fontawesome()
-  {
-    require(['fontawesome']);
-  }
-
   function setup_bootstrap()
   {
     require(['bootstrap'], function()
@@ -120,7 +115,6 @@
 
   function setup()
   {
-    setup_fontawesome();
     setup_bootstrap();
     setup_selectize();
     setup_mousetrap();
