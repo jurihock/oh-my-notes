@@ -2,11 +2,14 @@
 
   <script>
 
-  require(['fontawesome']);
-
-  require(['jquery', 'bootstrap'], function()
+  function setup_fontawesome()
   {
-    $(function()
+    require(['fontawesome']);
+  }
+
+  function setup_bootstrap()
+  {
+    require(['bootstrap'], function()
     {
       // init tooltips
       $('[data-toggle="tooltip"]').tooltip();
@@ -35,11 +38,11 @@
         }
       });
     });
-  });
+  }
 
-  require(['jquery', 'bootstrap', 'selectize'], function()
+  function setup_selectize()
   {
-    $(function()
+    require(['selectize'], function()
     {
       $('#create_folder_dialog').on('show.bs.modal', function()
       {
@@ -92,38 +95,42 @@
         });
       }
     });
-  });
+  }
 
-  require(['jquery', 'mousetrap'], function()
+  function setup_mousetrap()
   {
-    $(function()
+    require(['mousetrap'], function()
     {
       Mousetrap.bind('alt+m', function() { $('#create_folder_dialog').modal('show'); }, 'keyup');
       Mousetrap.bind('alt+n', function() { $('#create_file_dialog').modal('show'); }, 'keyup');
       Mousetrap.bind('alt+e', function() { hide_selected_file_preview(); }, 'keyup');
       Mousetrap.bind('alt+v', function() { show_selected_file_preview(); }, 'keyup');
     });
-  });
+  }
+
+  function setup_buttons()
+  {
+    $('button[data-href]').on('click', function()
+    {
+      var href = $(this).attr('data-href');
+      window.location.replace(href);
+      return false;
+    });
+  }
+
+  function setup()
+  {
+    setup_fontawesome();
+    setup_bootstrap();
+    setup_selectize();
+    setup_mousetrap();
+    setup_buttons();
+    hide_selected_file_preview();
+  }
 
   require(['jquery'], function()
   {
-    $(function()
-    {
-      $('button[data-href]').on('click', function()
-      {
-        var href = $(this).attr('data-href');
-        window.location.replace(href);
-        return false;
-      });
-    });
-  });
-
-  require(['jquery'], function()
-  {
-    $(function()
-    {
-      hide_selected_file_preview();
-    });
+    $(document).ready(setup);
   });
 
   </script>
@@ -133,24 +140,6 @@
 {% macro functions() %}
 
   <script>
-
-  function show_hidden_folders()
-  {
-    require(['jquery'], function()
-    {
-      $('#folders-complete').removeClass('hide');
-      $('#folders-incomplete').addClass('hide');
-    });
-  }
-
-  function show_hidden_files()
-  {
-    require(['jquery'], function()
-    {
-      $('#files-complete').removeClass('hide');
-      $('#files-incomplete').addClass('hide');
-    });
-  }
 
   // https://stackoverflow.com/a/47934160
   function convert_base64_string_to_blob(base64string, mimetype)
@@ -178,7 +167,7 @@
 
   function save_selected_file_value(callback)
   {
-    require(['jquery', 'toastr'], function()
+    require(['toastr'], function(toastr)
     {
       var form = $('#selected_file_form');
       var type = form.attr('method');
@@ -222,9 +211,9 @@
 
   function show_selected_file_preview()
   {
-    require(['jquery', 'toastr'], function()
+    require(['toastr'], function(toastr)
     {
-      var on_selected_file_preview_ready = function(data)
+      var on_selected_file_preview_ready = function(data, fallbackUrl)
       {
         data = URL.createObjectURL(convert_base64_string_to_blob(data, 'application/pdf'));
 
@@ -235,7 +224,7 @@
           [
             '<p>',
             'It seems like your browser does not support online PDF viewing.',
-            'Please download the <a href="' + secondaryUrl + '">PDF</a> to view it offline.',
+            'Please download the <a href="' + fallbackUrl + '">PDF</a> to view it offline.',
             '</p>'
           ].join(' '),
           pdfOpenParams:
@@ -254,12 +243,15 @@
           $('#selected_file_preview').addClass('form-control');
           $('#selected_file_preview').html('');
 
-          var pdf = PDFObject.embed(data, '#selected_file_preview', args);
-
-          if (!pdf)
+          require(['pdfobject'], function(PDFObject)
           {
-            toastr.error('Unable to create preview for the file „{{ selected.folder.name }} / {{ selected.file.name }}“!', null);
-          }
+            var pdf = PDFObject.embed(data, '#selected_file_preview', args);
+
+            if (!pdf)
+            {
+              toastr.error('Unable to create preview for the file „{{ selected.folder.name }} / {{ selected.file.name }}“!', null);
+            }
+          });
 
           $('#selected_file_preview').fadeIn(850);
         });
@@ -285,13 +277,13 @@
         $('#selected_file_value').removeClass('size-hundred-percent').hide();
         $('#selected_file_preview').addClass('size-hundred-percent').fadeIn(250);
 
-        var primaryUrl = '{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id) }}';
-        var secondaryUrl = '{{ url_for('download_file', folder=selected.folder.id, file=selected.file.id, format='pdf') }}';
+        var previewUrl = '{{ url_for('preview_file', folder=selected.folder.id, file=selected.file.id) }}';
+        var fallbackUrl = '{{ url_for('download_file', folder=selected.folder.id, file=selected.file.id, format='pdf') }}';
 
-        $.ajax({ dataType: 'text', url: primaryUrl, timeout: 10000 })
+        $.ajax({ dataType: 'text', url: previewUrl, timeout: 10000 })
         .done(function(data)
         {
-          on_selected_file_preview_ready(data);
+          on_selected_file_preview_ready(data, fallbackUrl);
         })
         .fail(function(jqxhr)
         {
@@ -314,19 +306,28 @@
 
   function hide_selected_file_preview()
   {
-    require(['jquery'], function()
-    {
-      $('#selected_file_edit_button_group').show();
-      $('#selected_file_preview_button_group').hide();
+    $('#selected_file_edit_button_group').show();
+    $('#selected_file_preview_button_group').hide();
 
-      $('#selected_file_preview').removeClass('size-hundred-percent').hide();
-      $('#selected_file_value').addClass('size-hundred-percent').fadeIn(250);
+    $('#selected_file_preview').removeClass('size-hundred-percent').hide();
+    $('#selected_file_value').addClass('size-hundred-percent').fadeIn(250);
 
-      $('#selected_file_preview').removeClass('form-control');
-      $('#selected_file_preview').html('');
+    $('#selected_file_preview').removeClass('form-control');
+    $('#selected_file_preview').html('');
 
-      $('#selected_file_value').trigger('focus');
-    });
+    $('#selected_file_value').trigger('focus');
+  }
+
+  function show_hidden_folders()
+  {
+    $('#folders-complete').removeClass('hide');
+    $('#folders-incomplete').addClass('hide');
+  }
+
+  function show_hidden_files()
+  {
+    $('#files-complete').removeClass('hide');
+    $('#files-incomplete').addClass('hide');
   }
 
   </script>
