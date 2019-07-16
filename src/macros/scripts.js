@@ -2,6 +2,8 @@
 
   <script>
 
+  require(['fontawesome']);
+
   require(['jquery', 'bootstrap'], function()
   {
     $(function()
