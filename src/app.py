@@ -7,7 +7,7 @@ import subprocess
 import dateutil.parser
 
 from flask import Flask
-from jinja2 import ChoiceLoader, FileSystemLoader
+from jinja2 import Environment, ChoiceLoader, FileSystemLoader
 from datetime import datetime
 from pytz import timezone
 
@@ -38,6 +38,8 @@ class App(Flask):
         self.timezone = timezone(self.config['TIMEZONE'])
 
     def setup(self):
+
+        self.jinja_env.add_extension('jinja2.ext.do')
 
         macros_path = os.path.join(self.directory, 'macros')
         macros_paths = [ macros_path, *glob.glob(os.path.join(macros_path, '*' + os.path.sep)) ]
