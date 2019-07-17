@@ -13,7 +13,7 @@
 
   <link rel="icon" href="data:,"/>
 
-  <script src="{{ url_for('static', filename='js/require.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/require/require.js') }}"></script>
   <script>requirejs.config({ baseUrl: '/' });</script>
 
   {% for module in modules['js'] %}
